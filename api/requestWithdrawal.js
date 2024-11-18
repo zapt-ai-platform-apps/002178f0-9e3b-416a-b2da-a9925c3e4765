@@ -19,13 +19,13 @@ export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
       res.setHeader('Allow', ['POST']);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
+      return res.status(405).end(`الطريقة ${req.method} غير مسموح بها`);
     }
 
     const { userId, amount, walletAddress } = req.body;
 
     if (!userId || !amount || !walletAddress) {
-      return res.status(400).json({ error: 'User ID, Amount, and wallet address are required' });
+      return res.status(400).json({ error: 'مطلوب معرف المستخدم والمبلغ وعنوان المحفظة' });
     }
 
     const sql = neon(process.env.NEON_DB_URL);
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
     const balance = userBalance.length > 0 ? parseFloat(userBalance[0].balance) : 0;
 
     if (amount > balance) {
-      return res.status(400).json({ error: 'Insufficient balance' });
+      return res.status(400).json({ error: 'رصيد غير كافٍ' });
     }
 
     // Deduct amount from user balance
@@ -55,10 +55,10 @@ export default async function handler(req, res) {
       walletAddress: walletAddress,
     });
 
-    res.status(200).json({ message: 'Withdrawal request submitted' });
+    res.status(200).json({ message: 'تم تقديم طلب السحب' });
   } catch (error) {
     Sentry.captureException(error);
-    console.error('Error processing withdrawal:', error);
-    res.status(500).json({ error: 'Error processing withdrawal' });
+    console.error('خطأ في معالجة السحب:', error);
+    res.status(500).json({ error: 'خطأ في معالجة السحب' });
   }
 }

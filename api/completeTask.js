@@ -19,13 +19,13 @@ export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
       res.setHeader('Allow', ['POST']);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
+      return res.status(405).end(`الطريقة ${req.method} غير مسموح بها`);
     }
 
     const { userId, taskId } = req.body;
 
     if (!userId || !taskId) {
-      return res.status(400).json({ error: 'User ID and Task ID are required' });
+      return res.status(400).json({ error: 'مطلوب معرف المستخدم ومعرف المهمة' });
     }
 
     const sql = neon(process.env.NEON_DB_URL);
@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     const task = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
 
     if (task.length === 0) {
-      return res.status(404).json({ error: 'Task not found' });
+      return res.status(404).json({ error: 'لم يتم العثور على المهمة' });
     }
 
     const reward = task[0].reward;
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       .limit(1);
 
     if (existingCompletion.length > 0) {
-      return res.status(400).json({ error: 'Task already completed' });
+      return res.status(400).json({ error: 'تم إكمال المهمة سابقًا' });
     }
 
     // Insert task completion record
@@ -76,10 +76,10 @@ export default async function handler(req, res) {
         .where(eq(userBalances.userId, userId));
     }
 
-    res.status(200).json({ message: 'Task completed successfully' });
+    res.status(200).json({ message: 'تم إكمال المهمة بنجاح' });
   } catch (error) {
     Sentry.captureException(error);
-    console.error('Error completing task:', error);
-    res.status(500).json({ error: 'Error completing task' });
+    console.error('خطأ في إكمال المهمة:', error);
+    res.status(500).json({ error: 'خطأ في إكمال المهمة' });
   }
 }

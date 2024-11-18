@@ -1,55 +1,55 @@
-# New App
+# التطبيق الجديد
 
-New App is an application that allows users to perform tasks to earn cryptocurrencies and withdraw their earnings to their Faucetpay wallet.
+التطبيق الجديد هو تطبيق يسمح للمستخدمين بتنفيذ مهام لكسب العملات الرقمية وسحب أرباحهم إلى محفظة Faucetpay الخاصة بهم.
 
-## User Journey
+## مسار المستخدم
 
-1. **Access the App**
+1. **الوصول إلى التطبيق**
 
-   - The user opens the app and is presented with the dashboard.
+   - يفتح المستخدم التطبيق ويتم تقديم لوحة التحكم له.
 
-2. **Dashboard**
+2. **لوحة التحكم**
 
-   - The dashboard displays the user's current cryptocurrency balance.
-   - The user can see a list of available tasks they can complete to earn more coins.
+   - تعرض لوحة التحكم رصيد المستخدم الحالي من العملات الرقمية.
+   - يمكن للمستخدم رؤية قائمة بالمهام المتاحة التي يمكنه إكمالها لكسب المزيد من العملات.
 
-3. **View Available Tasks**
+3. **عرض المهام المتاحة**
 
-   - The user can browse through a list of tasks.
-   - Each task displays a description, the type of task, and the reward amount in coins.
-   - Tasks can include activities like watching videos, completing surveys, or visiting websites.
+   - يمكن للمستخدم تصفح قائمة المهام.
+   - تعرض كل مهمة وصفًا ونوع المهمة ومقدار المكافأة بالعملات.
+   - قد تشمل المهام أنشطة مثل مشاهدة الفيديوهات، إكمال الاستبيانات، أو زيارة المواقع.
 
-4. **Complete Tasks**
+4. **إكمال المهام**
 
-   - The user selects a task to complete.
-   - They follow the instructions provided for the task.
-   - After completing the task, they submit it for verification.
+   - يختار المستخدم مهمة ليكملها.
+   - يتبع التعليمات المقدمة للمهمة.
+   - بعد إكمال المهمة، يقدمها للتحقق.
 
-5. **Earning Coins**
+5. **كسب العملات**
 
-   - Upon successful completion and verification of the task, coins are credited to the user's balance.
-   - The user can see their updated balance on the dashboard.
+   - عند إكمال المهمة بنجاح والتحقق منها، تُضاف العملات إلى رصيد المستخدم.
+   - يمكن للمستخدم رؤية رصيده المحدث على لوحة التحكم.
 
-6. **Withdraw Earnings**
+6. **سحب الأرباح**
 
-   - Once the user has accumulated enough coins, they can request a withdrawal.
-   - The user navigates to the withdrawal page and enters their Faucetpay wallet address.
-   - They specify the amount they wish to withdraw.
-   - The app processes the withdrawal request and transfers the coins to the user's Faucetpay wallet.
+   - بمجرد أن يجمع المستخدم عددًا كافيًا من العملات، يمكنه طلب سحب.
+   - ينتقل المستخدم إلى صفحة السحب ويدخل عنوان محفظة Faucetpay الخاصة به.
+   - يحدد المبلغ الذي يرغب في سحبه.
+   - يعالج التطبيق طلب السحب وينقل العملات إلى محفظة Faucetpay الخاصة بالمستخدم.
 
-7. **Transaction History**
+7. **سجل المعاملات**
 
-   - The user can view their transaction history, including task completions and withdrawals.
-   - Each entry shows the date, description, and amount.
+   - يمكن للمستخدم عرض سجل المعاملات الخاص به، بما في ذلك إكمال المهام وعمليات السحب.
+   - يظهر كل إدخال التاريخ والوصف والمبلغ.
 
-## External APIs Used
+## واجهات برمجة التطبيقات الخارجية المستخدمة
 
-- **Faucetpay API**: Used to process cryptocurrency withdrawals to the user's Faucetpay wallet.
+- **Faucetpay API**: تُستخدم لمعالجة عمليات سحب العملات الرقمية إلى محفظة Faucetpay الخاصة بالمستخدم.
 
-## Notes
+## ملاحظات
 
-- The app is free to use.
-- Users can start using the app immediately without the need to sign up or log in.
-- Each user is assigned a unique identifier stored locally to keep track of their balance and task completions.
-- Users must adhere to the terms and conditions when completing tasks.
-- All tasks are verified before rewards are credited.
+- التطبيق مجاني للاستخدام.
+- يمكن للمستخدمين بدء استخدام التطبيق فورًا دون الحاجة إلى التسجيل أو تسجيل الدخول.
+- يتم تعيين معرف فريد لكل مستخدم يتم تخزينه محليًا لتتبع رصيده وإكمال المهام.
+- يجب على المستخدمين الالتزام بالشروط والأحكام عند إكمال المهام.
+- يتم التحقق من جميع المهام قبل إضافة المكافآت.

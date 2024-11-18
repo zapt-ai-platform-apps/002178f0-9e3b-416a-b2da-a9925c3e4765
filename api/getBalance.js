@@ -19,13 +19,13 @@ export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
       res.setHeader('Allow', ['POST']);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
+      return res.status(405).end(`الطريقة ${req.method} غير مسموح بها`);
     }
 
     const { userId } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
+      return res.status(400).json({ error: 'مطلوب معرف المستخدم' });
     }
 
     const sql = neon(process.env.NEON_DB_URL);
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     res.status(200).json({ balance });
   } catch (error) {
     Sentry.captureException(error);
-    console.error('Error fetching balance:', error);
-    res.status(500).json({ error: 'Error fetching balance' });
+    console.error('خطأ في جلب الرصيد:', error);
+    res.status(500).json({ error: 'خطأ في جلب الرصيد' });
   }
 }

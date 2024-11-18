@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   try {
     if (req.method !== 'GET') {
       res.setHeader('Allow', ['GET']);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
+      return res.status(405).end(`الطريقة ${req.method} غير مسموح بها`);
     }
 
     const sql = neon(process.env.NEON_DB_URL);
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     res.status(200).json(result);
   } catch (error) {
     Sentry.captureException(error);
-    console.error('Error fetching tasks:', error);
-    res.status(500).json({ error: 'Error fetching tasks' });
+    console.error('خطأ في جلب المهام:', error);
+    res.status(500).json({ error: 'خطأ في جلب المهام' });
   }
 }

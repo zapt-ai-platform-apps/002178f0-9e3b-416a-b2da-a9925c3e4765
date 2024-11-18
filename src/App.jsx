@@ -66,12 +66,12 @@ function App() {
         body: JSON.stringify({ userId: userId(), taskId }),
       });
       if (response.ok) {
-        alert('Task completed successfully!');
+        alert('تم إكمال المهمة بنجاح!');
         fetchTasks();
         fetchBalance();
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.error}`);
+        alert(`خطأ: ${errorData.error}`);
       }
     } catch (error) {
       console.error('Error completing task:', error);
@@ -95,13 +95,13 @@ function App() {
         }),
       });
       if (response.ok) {
-        alert('Withdrawal request submitted!');
+        alert('تم تقديم طلب السحب!');
         setWithdrawAmount('');
         setWalletAddress('');
         fetchBalance();
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.error}`);
+        alert(`خطأ: ${errorData.error}`);
       }
     } catch (error) {
       console.error('Error requesting withdrawal:', error);
@@ -111,31 +111,32 @@ function App() {
   };
 
   return (
-    <div class="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 p-4 text-gray-800">
+    <div class="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 p-4 text-gray-800" dir="rtl">
       <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-8">
-          <h1 class="text-4xl font-bold text-purple-600">New App</h1>
+          <h1 class="text-4xl font-bold text-purple-600">التطبيق الجديد</h1>
           <div class="flex items-center space-x-4">
-            <p class="text-lg font-semibold text-gray-700">Balance: {balance()} coins</p>
+            <p class="text-lg font-semibold text-gray-700">الرصيد: {balance()} عملات</p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
-            <h2 class="text-2xl font-bold mb-4 text-purple-600">Available Tasks</h2>
-            <Show when={!loading()} fallback={<p>Loading tasks...</p>}>
+            <h2 class="text-2xl font-bold mb-4 text-purple-600">المهام المتاحة</h2>
+            <Show when={!loading()} fallback={<p>جارٍ تحميل المهام...</p>}>
               <div class="space-y-4">
                 <For each={tasks()}>
                   {(task) => (
                     <div class="bg-white p-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
                       <p class="font-semibold text-lg text-purple-600 mb-2">{task.description}</p>
-                      <p class="text-gray-700 mb-2">Type: {task.type}</p>
-                      <p class="text-gray-700 mb-4">Reward: {task.reward} coins</p>
+                      <p class="text-gray-700 mb-2">نوع المهمة: {task.type}</p>
+                      <p class="text-gray-700 mb-4">المكافأة: {task.reward} عملات</p>
                       <button
                         class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
                         onClick={() => completeTask(task.id)}
+                        disabled={loading()}
                       >
-                        Complete Task
+                        أكمل المهمة
                       </button>
                     </div>
                   )}
@@ -145,19 +146,19 @@ function App() {
           </div>
 
           <div>
-            <h2 class="text-2xl font-bold mb-4 text-purple-600">Withdraw Earnings</h2>
+            <h2 class="text-2xl font-bold mb-4 text-purple-600">سحب الأرباح</h2>
             <div class="bg-white p-6 rounded-lg shadow-md">
               <div class="space-y-4">
                 <input
                   type="number"
-                  placeholder="Amount to withdraw"
+                  placeholder="المبلغ المراد سحبه"
                   value={withdrawAmount()}
                   onInput={(e) => setWithdrawAmount(e.target.value)}
                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent box-border"
                 />
                 <input
                   type="text"
-                  placeholder="Faucetpay Wallet Address"
+                  placeholder="عنوان محفظة Faucetpay"
                   value={walletAddress()}
                   onInput={(e) => setWalletAddress(e.target.value)}
                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent box-border"
@@ -167,7 +168,7 @@ function App() {
                   onClick={requestWithdrawal}
                   disabled={loading()}
                 >
-                  {loading() ? 'Processing...' : 'Request Withdrawal'}
+                  {loading() ? 'جارٍ المعالجة...' : 'طلب سحب'}
                 </button>
               </div>
             </div>
