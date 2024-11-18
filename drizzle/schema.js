@@ -24,7 +24,9 @@ export const withdrawals = pgTable('withdrawals', {
   id: serial('id').primaryKey(),
   userId: uuid('user_id').notNull(),
   amount: numeric('amount').notNull(),
+  currency: text('currency').notNull().default('BTC'),
   walletAddress: text('wallet_address').notNull(),
   status: text('status').default('pending'),
+  transactionId: text('transaction_id'),
   requestedAt: timestamp('requested_at').defaultNow(),
 });

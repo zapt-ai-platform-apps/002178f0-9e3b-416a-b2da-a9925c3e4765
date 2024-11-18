@@ -42,20 +42,70 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'رصيد غير كافٍ' });
     }
 
-    // Deduct amount from user balance
-    const newBalance = balance - amount;
-    await db.update(userBalances)
-      .set({ balance: newBalance })
-      .where(eq(userBalances.userId, userId));
+    const apiKey = process.env.FAUCETPAY_API_KEY;
+    const faucetPayUrl = 'https://faucetpay.io/api/v1/send';
 
-    // Insert withdrawal request
-    await db.insert(withdrawals).values({
-      userId: userId,
-      amount: amount,
-      walletAddress: walletAddress,
+    // Assume the currency is BTC
+    const currency = 'BTC';
+
+    // Convert amount to Satoshi (smallest unit)
+    // Assuming 1 coin = 1 Satoshi
+    const amountInSatoshi = amount;
+
+    if (amountInSatoshi <= 0) {
+      return res.status(400).json({ error: 'المبلغ غير كافٍ للسحب' });
+    }
+
+    const params = {
+      api_key: apiKey,
+      amount: amountInSatoshi.toString(),
+      to: walletAddress,
+      currency: currency,
+    };
+
+    const formBody = new URLSearchParams(params).toString();
+
+    const response = await fetch(faucetPayUrl, {
+      method: 'POST',
+      body: formBody,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      }
     });
 
-    res.status(200).json({ message: 'تم تقديم طلب السحب' });
+    const faucetPayResult = await response.json();
+
+    if (faucetPayResult.status === 200) {
+      // Deduct amount from user balance
+      const newBalance = balance - amount;
+      await db.update(userBalances)
+        .set({ balance: newBalance })
+        .where(eq(userBalances.userId, userId));
+
+      // Insert withdrawal record with status 'processed'
+      await db.insert(withdrawals).values({
+        userId: userId,
+        amount: amount,
+        walletAddress: walletAddress,
+        status: 'processed',
+        currency: currency,
+        transactionId: faucetPayResult.data['transactionId'] || '',
+      });
+
+      res.status(200).json({ message: 'تم معالجة السحب بنجاح' });
+    } else {
+      // Insert withdrawal record with status 'failed'
+      await db.insert(withdrawals).values({
+        userId: userId,
+        amount: amount,
+        walletAddress: walletAddress,
+        status: 'failed',
+        currency: currency,
+        transactionId: '',
+      });
+
+      res.status(400).json({ error: 'فشل في معالجة السحب: ' + faucetPayResult.message });
+    }
   } catch (error) {
     Sentry.captureException(error);
     console.error('خطأ في معالجة السحب:', error);
