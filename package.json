@@ -14,8 +14,7 @@
     "@neondatabase/serverless": "^0.9.5",
     "@zapt/zapt-js": "^1.0.5",
     "@sentry/browser": "^8.35.0",
-    "@sentry/node": "^8.35.0",
-    "uuid": "^9.0.0"
+    "@sentry/node": "^8.35.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",
