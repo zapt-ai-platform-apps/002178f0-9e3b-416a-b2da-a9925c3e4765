@@ -1,4 +1,4 @@
-import { userBalances } from '../drizzle/schema.js';
+import { userBalances, faucetClaims } from '../drizzle/schema.js';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { eq } from 'drizzle-orm';
@@ -38,7 +38,16 @@ export default async function handler(req, res) {
 
     const balance = userBalance.length > 0 ? userBalance[0].balance : 0;
 
-    res.status(200).json({ balance });
+    // Fetch last faucet claim time
+    const lastClaim = await db.select()
+      .from(faucetClaims)
+      .where(eq(faucetClaims.userId, userId))
+      .orderBy(faucetClaims.claimedAt, { descending: true })
+      .limit(1);
+
+    const lastClaimTime = lastClaim.length > 0 ? lastClaim[0].claimedAt : null;
+
+    res.status(200).json({ balance, lastClaimTime });
   } catch (error) {
     Sentry.captureException(error);
     console.error('خطأ في جلب الرصيد:', error);

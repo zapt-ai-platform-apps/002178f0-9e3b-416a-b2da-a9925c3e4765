@@ -1,4 +1,4 @@
-import { createSignal, onMount, For, Show } from 'solid-js';
+import { createSignal, onMount, For, Show, createEffect } from 'solid-js';
 import { createEvent } from './supabaseClient';
 
 function App() {
@@ -9,11 +9,20 @@ function App() {
   const [withdrawAmount, setWithdrawAmount] = createSignal('');
   const [walletAddress, setWalletAddress] = createSignal('');
   const [currentPage, setCurrentPage] = createSignal(userId() ? 'homePage' : 'login');
+  const [lastClaimTime, setLastClaimTime] = createSignal(null);
+  const [canClaimFaucet, setCanClaimFaucet] = createSignal(false);
+  const [timeUntilNextClaim, setTimeUntilNextClaim] = createSignal('');
 
   onMount(() => {
     if (userId()) {
       fetchTasks();
       fetchBalance();
+
+      const timer = setInterval(() => {
+        updateFaucetStatus();
+      }, 1000);
+
+      return () => clearInterval(timer);
     }
   });
 
@@ -24,6 +33,12 @@ function App() {
       setCurrentPage('homePage');
       fetchTasks();
       fetchBalance();
+
+      const timer = setInterval(() => {
+        updateFaucetStatus();
+      }, 1000);
+
+      return () => clearInterval(timer);
     } else {
       alert('يرجى إدخال عنوان محفظة FaucetPay الخاصة بك');
     }
@@ -60,11 +75,40 @@ function App() {
       if (response.ok) {
         const data = await response.json();
         setBalance(data.balance);
+        if (data.lastClaimTime) {
+          setLastClaimTime(new Date(data.lastClaimTime));
+        } else {
+          setLastClaimTime(null);
+        }
+        updateFaucetStatus();
       } else {
         console.error('Error fetching balance:', response.statusText);
       }
     } catch (error) {
       console.error('Error fetching balance:', error);
+    }
+  };
+
+  const updateFaucetStatus = () => {
+    if (lastClaimTime()) {
+      const now = new Date();
+      const nextClaimTime = new Date(lastClaimTime());
+      nextClaimTime.setHours(nextClaimTime.getHours() + 24);
+
+      if (now >= nextClaimTime) {
+        setCanClaimFaucet(true);
+        setTimeUntilNextClaim('');
+      } else {
+        setCanClaimFaucet(false);
+        const diff = nextClaimTime - now;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeUntilNextClaim(`${hours} ساعات ${minutes} دقائق ${seconds} ثواني`);
+      }
+    } else {
+      setCanClaimFaucet(true);
+      setTimeUntilNextClaim('');
     }
   };
 
@@ -88,6 +132,30 @@ function App() {
       }
     } catch (error) {
       console.error('Error completing task:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const claimFaucet = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/claimFaucet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: userId() }),
+      });
+      if (response.ok) {
+        alert('تم جمع المكافأة من الصنبور بنجاح!');
+        fetchBalance();
+      } else {
+        const errorData = await response.json();
+        alert(`خطأ: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error claiming faucet:', error);
     } finally {
       setLoading(false);
     }
@@ -166,6 +234,22 @@ function App() {
                 تسجيل الخروج
               </button>
             </div>
+          </div>
+
+          <div class="my-4">
+            <h2 class="text-2xl font-bold mb-4 text-purple-600">صنبور العملات الرقمية</h2>
+            <button
+              class={`px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${
+                !canClaimFaucet() || loading() ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              onClick={claimFaucet}
+              disabled={!canClaimFaucet() || loading()}
+            >
+              {loading() ? 'جارٍ المعالجة...' : 'جمع من الصنبور'}
+            </button>
+            <Show when={!canClaimFaucet() && timeUntilNextClaim()}>
+              <p class="mt-2 text-gray-700">يمكنك جمع من الصنبور بعد: {timeUntilNextClaim()}</p>
+            </Show>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">

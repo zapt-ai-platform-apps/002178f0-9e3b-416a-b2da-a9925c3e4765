@@ -30,3 +30,9 @@ export const withdrawals = pgTable('withdrawals', {
   transactionId: text('transaction_id'),
   requestedAt: timestamp('requested_at').defaultNow(),
 });
+
+export const faucetClaims = pgTable('faucet_claims', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  claimedAt: timestamp('claimed_at').defaultNow(),
+});
