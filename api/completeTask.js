@@ -1,8 +1,7 @@
 import { tasks, taskCompletions, userBalances } from '../drizzle/schema.js';
-import { authenticateUser } from "./_apiUtils.js";
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import * as Sentry from "@sentry/node";
 
 Sentry.init({
@@ -23,12 +22,10 @@ export default async function handler(req, res) {
       return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
-    const user = await authenticateUser(req);
+    const { userId, taskId } = req.body;
 
-    const { taskId } = req.body;
-
-    if (!taskId) {
-      return res.status(400).json({ error: 'Task ID is required' });
+    if (!userId || !taskId) {
+      return res.status(400).json({ error: 'User ID and Task ID are required' });
     }
 
     const sql = neon(process.env.NEON_DB_URL);
@@ -46,7 +43,7 @@ export default async function handler(req, res) {
     // Check if user has already completed the task
     const existingCompletion = await db.select()
       .from(taskCompletions)
-      .where(eq(taskCompletions.userId, user.id), eq(taskCompletions.taskId, taskId))
+      .where(and(eq(taskCompletions.userId, userId), eq(taskCompletions.taskId, taskId)))
       .limit(1);
 
     if (existingCompletion.length > 0) {
@@ -55,20 +52,20 @@ export default async function handler(req, res) {
 
     // Insert task completion record
     await db.insert(taskCompletions).values({
-      userId: user.id,
+      userId: userId,
       taskId: taskId,
     });
 
     // Update user balance
     const userBalance = await db.select()
       .from(userBalances)
-      .where(eq(userBalances.userId, user.id))
+      .where(eq(userBalances.userId, userId))
       .limit(1);
 
     if (userBalance.length === 0) {
       // Create new balance record
       await db.insert(userBalances).values({
-        userId: user.id,
+        userId: userId,
         balance: reward,
       });
     } else {
@@ -76,17 +73,13 @@ export default async function handler(req, res) {
       const newBalance = parseFloat(userBalance[0].balance) + parseFloat(reward);
       await db.update(userBalances)
         .set({ balance: newBalance })
-        .where(eq(userBalances.userId, user.id));
+        .where(eq(userBalances.userId, userId));
     }
 
     res.status(200).json({ message: 'Task completed successfully' });
   } catch (error) {
     Sentry.captureException(error);
     console.error('Error completing task:', error);
-    if (error.message.includes('Authorization') || error.message.includes('token')) {
-      res.status(401).json({ error: 'Authentication failed' });
-    } else {
-      res.status(500).json({ error: 'Error completing task' });
-    }
+    res.status(500).json({ error: 'Error completing task' });
   }
 }

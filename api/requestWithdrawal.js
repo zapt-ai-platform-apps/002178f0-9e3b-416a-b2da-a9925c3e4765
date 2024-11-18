@@ -1,5 +1,4 @@
 import { userBalances, withdrawals } from '../drizzle/schema.js';
-import { authenticateUser } from "./_apiUtils.js";
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { eq } from 'drizzle-orm';
@@ -23,12 +22,10 @@ export default async function handler(req, res) {
       return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
-    const user = await authenticateUser(req);
+    const { userId, amount, walletAddress } = req.body;
 
-    const { amount, walletAddress } = req.body;
-
-    if (!amount || !walletAddress) {
-      return res.status(400).json({ error: 'Amount and wallet address are required' });
+    if (!userId || !amount || !walletAddress) {
+      return res.status(400).json({ error: 'User ID, Amount, and wallet address are required' });
     }
 
     const sql = neon(process.env.NEON_DB_URL);
@@ -36,7 +33,7 @@ export default async function handler(req, res) {
 
     const userBalance = await db.select()
       .from(userBalances)
-      .where(eq(userBalances.userId, user.id))
+      .where(eq(userBalances.userId, userId))
       .limit(1);
 
     const balance = userBalance.length > 0 ? parseFloat(userBalance[0].balance) : 0;
@@ -49,11 +46,11 @@ export default async function handler(req, res) {
     const newBalance = balance - amount;
     await db.update(userBalances)
       .set({ balance: newBalance })
-      .where(eq(userBalances.userId, user.id));
+      .where(eq(userBalances.userId, userId));
 
     // Insert withdrawal request
     await db.insert(withdrawals).values({
-      userId: user.id,
+      userId: userId,
       amount: amount,
       walletAddress: walletAddress,
     });
@@ -62,10 +59,6 @@ export default async function handler(req, res) {
   } catch (error) {
     Sentry.captureException(error);
     console.error('Error processing withdrawal:', error);
-    if (error.message.includes('Authorization') || error.message.includes('token')) {
-      res.status(401).json({ error: 'Authentication failed' });
-    } else {
-      res.status(500).json({ error: 'Error processing withdrawal' });
-    }
+    res.status(500).json({ error: 'Error processing withdrawal' });
   }
 }

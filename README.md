@@ -4,15 +4,12 @@ New App is an application that allows users to perform tasks to earn cryptocurre
 
 ## User Journey
 
-1. **Sign Up / Login**
+1. **Access the App**
 
-   - The user opens the app and is presented with a login screen.
-   - They can sign in using their email via magic link or with social providers like Google, Facebook, or Apple.
-   - Above the authentication component, there is a "Sign in with ZAPT" text and a link to the [ZAPT](https://www.zapt.ai) marketing site.
+   - The user opens the app and is presented with the dashboard.
 
 2. **Dashboard**
 
-   - After signing in, the user is taken to the dashboard.
    - The dashboard displays the user's current cryptocurrency balance.
    - The user can see a list of available tasks they can complete to earn more coins.
 
@@ -45,10 +42,6 @@ New App is an application that allows users to perform tasks to earn cryptocurre
    - The user can view their transaction history, including task completions and withdrawals.
    - Each entry shows the date, description, and amount.
 
-8. **Sign Out**
-
-   - The user can sign out of the app using the "Sign Out" button.
-
 ## External APIs Used
 
 - **Faucetpay API**: Used to process cryptocurrency withdrawals to the user's Faucetpay wallet.
@@ -56,5 +49,7 @@ New App is an application that allows users to perform tasks to earn cryptocurre
 ## Notes
 
 - The app is free to use.
+- Users can start using the app immediately without the need to sign up or log in.
+- Each user is assigned a unique identifier stored locally to keep track of their balance and task completions.
 - Users must adhere to the terms and conditions when completing tasks.
 - All tasks are verified before rewards are credited.

@@ -1,5 +1,4 @@
 import { tasks } from '../drizzle/schema.js';
-import { authenticateUser } from "./_apiUtils.js";
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import * as Sentry from "@sentry/node";
@@ -22,8 +21,6 @@ export default async function handler(req, res) {
       return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
-    await authenticateUser(req);
-
     const sql = neon(process.env.NEON_DB_URL);
     const db = drizzle(sql);
 
@@ -35,10 +32,6 @@ export default async function handler(req, res) {
   } catch (error) {
     Sentry.captureException(error);
     console.error('Error fetching tasks:', error);
-    if (error.message.includes('Authorization') || error.message.includes('token')) {
-      res.status(401).json({ error: 'Authentication failed' });
-    } else {
-      res.status(500).json({ error: 'Error fetching tasks' });
-    }
+    res.status(500).json({ error: 'Error fetching tasks' });
   }
 }

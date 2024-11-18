@@ -1,5 +1,4 @@
 import { userBalances } from '../drizzle/schema.js';
-import { authenticateUser } from "./_apiUtils.js";
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { eq } from 'drizzle-orm';
@@ -18,19 +17,23 @@ Sentry.init({
 
 export default async function handler(req, res) {
   try {
-    if (req.method !== 'GET') {
-      res.setHeader('Allow', ['GET']);
+    if (req.method !== 'POST') {
+      res.setHeader('Allow', ['POST']);
       return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
-    const user = await authenticateUser(req);
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
 
     const sql = neon(process.env.NEON_DB_URL);
     const db = drizzle(sql);
 
     const userBalance = await db.select()
       .from(userBalances)
-      .where(eq(userBalances.userId, user.id))
+      .where(eq(userBalances.userId, userId))
       .limit(1);
 
     const balance = userBalance.length > 0 ? userBalance[0].balance : 0;
@@ -39,10 +42,6 @@ export default async function handler(req, res) {
   } catch (error) {
     Sentry.captureException(error);
     console.error('Error fetching balance:', error);
-    if (error.message.includes('Authorization') || error.message.includes('token')) {
-      res.status(401).json({ error: 'Authentication failed' });
-    } else {
-      res.status(500).json({ error: 'Error fetching balance' });
-    }
+    res.status(500).json({ error: 'Error fetching balance' });
   }
 }
