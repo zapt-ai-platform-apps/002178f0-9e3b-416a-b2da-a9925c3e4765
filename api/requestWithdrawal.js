@@ -22,10 +22,10 @@ export default async function handler(req, res) {
       return res.status(405).end(`الطريقة ${req.method} غير مسموح بها`);
     }
 
-    const { userId, amount, walletAddress } = req.body;
+    const { userId, amount, walletAddress, apiKey } = req.body;
 
-    if (!userId || !amount || !walletAddress) {
-      return res.status(400).json({ error: 'مطلوب معرف المستخدم والمبلغ وعنوان المحفظة' });
+    if (!userId || !amount || !walletAddress || !apiKey) {
+      return res.status(400).json({ error: 'مطلوب معرف المستخدم، المبلغ، عنوان المحفظة، ومفتاح API' });
     }
 
     const sql = neon(process.env.NEON_DB_URL);
@@ -42,7 +42,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'رصيد غير كافٍ' });
     }
 
-    const apiKey = process.env.FAUCETPAY_API_KEY;
     const faucetPayUrl = 'https://faucetpay.io/api/v1/send';
 
     // Assume the currency is BTC

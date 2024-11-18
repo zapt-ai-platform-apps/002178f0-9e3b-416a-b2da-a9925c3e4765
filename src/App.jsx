@@ -1,20 +1,20 @@
 import { createSignal, onMount, For, Show, createEffect } from 'solid-js';
-import { createEvent } from './supabaseClient';
 
 function App() {
-  const [userId, setUserId] = createSignal(localStorage.getItem('userId') || '');
+  const [apiKey, setApiKey] = createSignal(localStorage.getItem('apiKey') || '');
+  const [walletAddress, setWalletAddress] = createSignal(localStorage.getItem('walletAddress') || '');
   const [tasks, setTasks] = createSignal([]);
   const [balance, setBalance] = createSignal(0);
   const [loading, setLoading] = createSignal(false);
   const [withdrawAmount, setWithdrawAmount] = createSignal('');
-  const [walletAddress, setWalletAddress] = createSignal('');
-  const [currentPage, setCurrentPage] = createSignal(userId() ? 'homePage' : 'login');
+  const [currentPage, setCurrentPage] = createSignal(apiKey() ? 'homePage' : 'login');
   const [lastClaimTime, setLastClaimTime] = createSignal(null);
   const [canClaimFaucet, setCanClaimFaucet] = createSignal(false);
   const [timeUntilNextClaim, setTimeUntilNextClaim] = createSignal('');
 
   onMount(() => {
-    if (userId()) {
+    if (apiKey()) {
+      fetchWalletAddress();
       fetchTasks();
       fetchBalance();
 
@@ -26,21 +26,87 @@ function App() {
     }
   });
 
-  const handleLogin = () => {
-    if (walletAddress()) {
-      setUserId(walletAddress());
-      localStorage.setItem('userId', walletAddress());
-      setCurrentPage('homePage');
-      fetchTasks();
-      fetchBalance();
+  const handleLogin = async () => {
+    if (apiKey()) {
+      setLoading(true);
+      try {
+        // Fetch wallet address using the API key
+        const params = {
+          api_key: apiKey(),
+          nonce: Date.now(),
+        };
 
-      const timer = setInterval(() => {
-        updateFaucetStatus();
-      }, 1000);
+        const formBody = new URLSearchParams(params).toString();
 
-      return () => clearInterval(timer);
+        const response = await fetch('https://faucetpay.io/api/v1/balance', {
+          method: 'POST',
+          body: formBody,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.status === 200) {
+          const address = data.data.address;
+          setWalletAddress(address);
+          localStorage.setItem('apiKey', apiKey());
+          localStorage.setItem('walletAddress', address);
+          setCurrentPage('homePage');
+          fetchTasks();
+          fetchBalance();
+
+          const timer = setInterval(() => {
+            updateFaucetStatus();
+          }, 1000);
+
+          return () => clearInterval(timer);
+        } else {
+          alert('مفتاح API غير صالح. يرجى التحقق والمحاولة مرة أخرى.');
+        }
+      } catch (error) {
+        console.error('Error fetching wallet address:', error);
+        alert('حدث خطأ أثناء التحقق من مفتاح API.');
+      } finally {
+        setLoading(false);
+      }
     } else {
-      alert('يرجى إدخال عنوان محفظة FaucetPay الخاصة بك');
+      alert('يرجى إدخال مفتاح API الخاص بك');
+    }
+  };
+
+  const fetchWalletAddress = async () => {
+    if (!apiKey()) return;
+    try {
+      const params = {
+        api_key: apiKey(),
+        nonce: Date.now(),
+      };
+
+      const formBody = new URLSearchParams(params).toString();
+
+      const response = await fetch('https://faucetpay.io/api/v1/balance', {
+        method: 'POST',
+        body: formBody,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.status === 200) {
+        setWalletAddress(data.data.address);
+        localStorage.setItem('walletAddress', data.data.address);
+      } else {
+        alert('فشل في جلب عنوان المحفظة. يرجى تسجيل الدخول مرة أخرى.');
+        handleLogout();
+      }
+    } catch (error) {
+      console.error('Error fetching wallet address:', error);
+      alert('حدث خطأ أثناء جلب عنوان المحفظة.');
+      handleLogout();
     }
   };
 
@@ -70,7 +136,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: userId() }),
+        body: JSON.stringify({ userId: walletAddress() }),
       });
       if (response.ok) {
         const data = await response.json();
@@ -120,7 +186,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: userId(), taskId }),
+        body: JSON.stringify({ userId: walletAddress(), taskId }),
       });
       if (response.ok) {
         alert('تم إكمال المهمة بنجاح!');
@@ -145,7 +211,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: userId() }),
+        body: JSON.stringify({ userId: walletAddress() }),
       });
       if (response.ok) {
         alert('تم جمع المكافأة من الصنبور بنجاح!');
@@ -170,9 +236,10 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: userId(),
+          userId: walletAddress(),
+          apiKey: apiKey(),
           amount: parseFloat(withdrawAmount()),
-          walletAddress: userId(),
+          walletAddress: walletAddress(),
         }),
       });
       if (response.ok) {
@@ -191,8 +258,9 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userId');
-    setUserId('');
+    localStorage.removeItem('apiKey');
+    localStorage.removeItem('walletAddress');
+    setApiKey('');
     setWalletAddress('');
     setCurrentPage('login');
   };
@@ -204,19 +272,22 @@ function App() {
         fallback={
           <div class="flex items-center justify-center min-h-screen">
             <div class="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
-              <h2 class="text-3xl font-bold mb-6 text-center text-purple-600">تسجيل الدخول باستخدام عنوان محفظة FaucetPay</h2>
+              <h2 class="text-3xl font-bold mb-6 text-center text-purple-600">تسجيل الدخول باستخدام مفتاح API لمحفظة FaucetPay</h2>
               <input
                 type="text"
-                placeholder="أدخل عنوان محفظة FaucetPay الخاصة بك"
-                value={walletAddress()}
-                onInput={(e) => setWalletAddress(e.target.value)}
+                placeholder="أدخل مفتاح API الخاص بك"
+                value={apiKey()}
+                onInput={(e) => setApiKey(e.target.value)}
                 class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent box-border"
               />
               <button
-                class="w-full px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                class={`w-full px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${
+                  loading() ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
                 onClick={handleLogin}
+                disabled={loading()}
               >
-                تسجيل الدخول
+                {loading() ? 'جارٍ التحقق...' : 'تسجيل الدخول'}
               </button>
             </div>
           </div>
@@ -288,7 +359,7 @@ function App() {
                     onInput={(e) => setWithdrawAmount(e.target.value)}
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent box-border"
                   />
-                  <p class="text-gray-700">سيتم السحب إلى محفظتك: {userId()}</p>
+                  <p class="text-gray-700">سيتم السحب إلى محفظتك: {walletAddress()}</p>
                 </div>
                 <button
                   class={`w-full mt-4 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer ${
